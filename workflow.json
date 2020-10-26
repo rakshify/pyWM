@@ -1,0 +1,197 @@
+{
+  "tasks": [
+    {
+      "key": "get_merchant_idir",
+      "object": "method",
+      "variable": "merchant_dir",
+      "arguments": [
+        {
+          "object": "kwargs_obj",
+          "variable": "merchant_id",
+          "name": "merchant_id"
+        },
+        {
+          "object": "direct",
+          "variable": "input",
+          "name": "folder_type"
+        }
+      ]
+    },
+    {
+      "key": "get_merchant_hdir",
+      "object": "method",
+      "variable": "merchant_dir",
+      "arguments": [
+        {
+          "object": "kwargs_obj",
+          "variable": "merchant_id",
+          "name": "merchant_id"
+        },
+        {
+          "object": "direct",
+          "variable": "helpers",
+          "name": "folder_type"
+        }
+      ]
+    },
+    {
+      "key": "merchant_stock_input_file",
+      "object": "method",
+      "variable": "os_join",
+      "arguments": [
+        {
+          "object": "method",
+          "variable": "get_merchant_idir"
+        },
+        {
+          "object": "direct",
+          "variable": "stock_input.csv"
+        }
+      ]
+    },
+    {
+      "key": "merchant_master_file",
+      "object": "method",
+      "variable": "os_join",
+      "arguments": [
+        {
+          "object": "method",
+          "variable": "get_merchant_hdir"
+        },
+        {
+          "object": "direct",
+          "variable": "master_file.csv"
+        }
+      ]
+    },
+    {
+      "key": "read_iventory",
+      "object": "method",
+      "variable": "read_file",
+      "arguments": [
+        {
+          "object": "kwargs_obj",
+          "variable": "inventory_file",
+          "name": "file_path"
+        },
+        {
+          "object": "direct",
+          "variable": "frame",
+          "name": "read_using"
+        },
+        {
+          "object": "direct",
+          "variable": "csv",
+          "name": "read_as"
+        },
+        {
+          "object": "kwargs_obj",
+          "variable": "inventory_cols",
+          "name": "fcols"
+        }
+      ]
+    },
+    {
+      "key": "read_master",
+      "object": "method",
+      "variable": "read_file",
+      "arguments": [
+        {
+          "object": "method",
+          "variable": "merchant_master_file",
+          "name": "file_path"
+        },
+        {
+          "object": "direct",
+          "variable": "frame",
+          "name": "read_using"
+        },
+        {
+          "object": "direct",
+          "variable": "csv",
+          "name": "read_as"
+        }
+      ]
+    },
+    {
+      "key": "make_stock_input",
+      "object": "method",
+      "variable": "intersect",
+      "arguments": [
+        {
+          "object": "method",
+          "variable": "read_master"
+        },
+        {
+          "object": "method",
+          "variable": "read_iventory"
+        },
+        {
+          "object": "direct",
+          "variable": "barcode",
+          "name": "on"
+        }
+      ]
+    },
+    {
+      "key": "write_stock_input",
+      "object": "method",
+      "variable": "write_file",
+      "arguments": [
+        {
+          "object": "method",
+          "variable": "make_stock_input"
+        },
+        {
+          "object": "method",
+          "variable": "merchant_stock_input_file",
+          "name": "file_path"
+        },
+        {
+          "object": "direct",
+          "variable": "frame",
+          "name": "write_using"
+        },
+        {
+          "object": "direct",
+          "variable": "csv",
+          "name": "write_as"
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "task": "write_stock_input",
+      "downstreams": [
+        "merchant_stock_input_file",
+        "make_stock_input"
+      ]
+    },
+    {
+      "task": "merchant_stock_input_file",
+      "downstreams": [
+        "get_merchant_idir"
+      ]
+    },
+    {
+      "task": "make_stock_input",
+      "downstreams": [
+        "read_master",
+        "read_iventory"
+      ]
+    },
+    {
+      "task": "read_master",
+      "downstreams": [
+        "merchant_master_file"
+      ]
+    },
+    {
+      "task": "merchant_master_file",
+      "downstreams": [
+        "get_merchant_hdir"
+      ]
+    }
+  ]
+}
