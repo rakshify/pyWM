@@ -103,7 +103,8 @@ class BooleanOp(BasicOp):
                          "." % (op, type(a), type(b))))
 
 
-def _dnc(pair_func, *args, **kwargs):
+def _dnc(*args, **kwargs):
+    pair_func = kwargs.get("pair_func")
     l = len(args)
     if l == 0:
         err = "At least one argument must be provided for operation."
@@ -111,8 +112,16 @@ def _dnc(pair_func, *args, **kwargs):
     if l == 1:
         return args[0]
     m = l // 2
-    left = _dnc(*args[:m], op)
-    right = _dnc(*args[m:], op)
+    # print(m, l)
+    # print(args[:m])
+    # print(args[m:])
+    # input("just checking...")
+    left = _dnc(*args[:m], **kwargs)
+    right = _dnc(*args[m:], **kwargs)
+    # print(l, m)
+    # print(left)
+    # print(right)
+    # input("just checking2...")
     return pair_func(left, right)
 
 
@@ -189,4 +198,32 @@ method_map.update({
     "timedelta_to_days": timedelta_to_days,
     "timedelta_to_seconds": timedelta_to_seconds,
     "timedelta_to_musecs": timedelta_to_musecs
+})
+
+
+# BASIC PANDAS FUNCTIONS
+def append_columns(*args, **kwargs):
+    #
+    df = args[0]
+    for column, value in kwargs.items():
+        df[column] = value
+
+    return df
+
+
+def select_columns(*args, **kwargs):
+    #
+    df = args[0]
+    return_as = kwargs.get("return_as", "frame")
+    if return_as == "frame":
+        return df[args[1:]]
+    elif len(args[1:]) == 1:
+        return df[args[1]]
+    else:
+        raise ValueError("Can only return a single column as series.")
+
+
+method_map.update({
+    "append_columns": append_columns,
+    "select_columns": select_columns
 })

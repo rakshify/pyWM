@@ -15,7 +15,7 @@ class FileIO(object):
             "json": cls._read_json,
             "text": cls._read_text
         }
-        read_using = kwargs.get('read_using')
+        read_using = kwargs.pop('read_using')
         if not read_using and file_path.endswith((".json", ".csv", ".xlsx")):
             read_using = frame
         if read_using not in func_map:
@@ -30,7 +30,7 @@ class FileIO(object):
             "json": cls._write_json,
             "text": cls._write_text
         }
-        write_using = kwargs.get('write_using')
+        write_using = kwargs.pop('write_using')
         if not write_using and file_path.endswith((".json", ".csv", ".xlsx")):
             write_using = frame
         if write_using not in func_map:
@@ -50,21 +50,22 @@ class FileIO(object):
 
     @staticmethod
     def _read_frame(file_path: str, *args, **kwargs) -> pd.DataFrame:
-        read_as = kwargs.get('read_as', filename.rsplit(".", 1)[1])
+        read_as = kwargs.pop('read_as', file_path.rsplit(".", 1)[1])
         if read_as == "json":
             foo = partial(pd.read_json, file_path)
         elif read_as == "csv":
             foo = partial(pd.read_csv, file_path)
         elif read_as == "xlsx":
-            sheet_name = kwargs.get("sheet_name", "Sheet1")
-            foo = partial(pd.read_excel, file_path, sheet_name=sheet_name)
+            # sheet_name = kwargs.get("sheet_name", "Sheet1")
+            # foo = partial(pd.read_excel, file_path, sheet_name=sheet_name)
+            foo = partial(pd.read_excel, file_path)
         else:
             raise ValueError(("Can only read pandas frame from json,"
                               " csv or xlsx file as of now."))
-        fcols = kwargs.get("fcols")
-        if fcols:
-            foo = partial(foo, names=fcols)
-        return foo()
+        # fcols = kwargs.get("fcols")
+        # if fcols:
+        #     foo = partial(foo, names=fcols)
+        return foo(**kwargs)
 
     @staticmethod
     def _write_text(obj: str, file_path: str, *args, **kwargs):
@@ -79,27 +80,29 @@ class FileIO(object):
 
     @staticmethod
     def _write_frame(obj: pd.DataFrame, file_path: str, *args, **kwargs):
-        write_as = kwargs.get('write_as', filename.rsplit(".", 1)[1])
+        write_as = kwargs.pop('write_as', file_path.rsplit(".", 1)[1])
         if write_as == "json":
-            foo = partial(pd.to_json, file_path, orient="records", index=False)
+            foo = partial(obj.to_json, file_path,
+                          orient="records", index=False)
         elif write_as == "csv":
-            foo = partial(pd.to_csv, file_path, index=False)
+            foo = partial(obj.to_csv, file_path, index=False)
         elif write_as == "xlsx":
             sheet_name = kwargs.get("sheet_name", "Sheet1")
             with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
                 obj.to_excel(writer, sheet_name=sheet_name)
-                foo = writer.save
+            foo = writer.save
         else:
             raise ValueError(("Can only write pandas frame as json,"
                               " csv or xlsx file as of now."))
-        foo()
+        foo(**kwargs)
 
 
 # IO OPERATIONS
 def read_file(*args, **kwargs):
     #
     fp = kwargs.pop("file_path")
-    return FileIO.read(fp, *args, **kwargs)
+    df = FileIO.read(fp, *args, **kwargs)
+    return df
 
 
 def write_file(*args, **kwargs):

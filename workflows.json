@@ -1,0 +1,571 @@
+[
+  {
+    "workflow_key": "test",
+    "method_dag": {
+      "tasks": [
+        {
+          "key": "node1",
+          "object": "method",
+          "variable": "mul",
+          "arguments": [
+            {
+              "object": "direct",
+              "variable": 5
+            },
+            {
+              "object": "direct",
+              "variable": 2
+            },
+            {
+              "object": "direct",
+              "variable": 1.2
+            }
+          ]
+        },
+        {
+          "key": "node2",
+          "object": "method",
+          "variable": "add",
+          "arguments": [
+            {
+              "object": "direct",
+              "variable": 2
+            },
+            {
+              "object": "direct",
+              "variable": 4
+            },
+            {
+              "object": "direct",
+              "variable": 1
+            },
+            {
+              "object": "direct",
+              "variable": 3
+            }
+          ]
+        },
+        {
+          "key": "node3",
+          "object": "method",
+          "variable": "sub",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "node1"
+            },
+            {
+              "object": "method",
+              "variable": "node2"
+            }
+          ]
+        },
+        {
+          "key": "node4",
+          "object": "method",
+          "variable": "div",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "node1"
+            },
+            {
+              "object": "method",
+              "variable": "node3"
+            }
+          ]
+        },
+        {
+          "key": "csv_file",
+          "object": "method",
+          "variable": "os_join",
+          "arguments": [
+            {
+              "object": "direct",
+              "variable": "."
+            },
+            {
+              "object": "kwargs_obj",
+              "variable": "file_path"
+            }
+          ]
+        },
+        {
+          "key": "read_file",
+          "object": "method",
+          "variable": "read_file",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "csv_file",
+              "name": "file_path"
+            },
+            {
+              "object": "direct",
+              "variable": "frame",
+              "name": "read_using"
+            },
+            {
+              "object": "direct",
+              "variable": "csv",
+              "name": "read_as"
+            }
+          ]
+        },
+        {
+          "key": "s1",
+          "object": "method",
+          "variable": "select_columns",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "read_file"
+            },
+            {
+              "object": "direct",
+              "variable": "s1"
+            },
+            {
+              "object": "direct",
+              "variable": "series",
+              "name": "return_as"
+            }
+          ]
+        },
+        {
+          "key": "s2",
+          "object": "method",
+          "variable": "select_columns",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "read_file"
+            },
+            {
+              "object": "direct",
+              "variable": "s2"
+            },
+            {
+              "object": "direct",
+              "variable": "series",
+              "name": "return_as"
+            }
+          ]
+        },
+        {
+          "key": "s4",
+          "object": "method",
+          "variable": "select_columns",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "read_file"
+            },
+            {
+              "object": "direct",
+              "variable": "s4"
+            },
+            {
+              "object": "direct",
+              "variable": "series",
+              "name": "return_as"
+            }
+          ]
+        },
+        {
+          "key": "a_square",
+          "object": "method",
+          "variable": "mul",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "s1"
+            },
+            {
+              "object": "method",
+              "variable": "s1"
+            }
+          ]
+        },
+        {
+          "key": "b_square",
+          "object": "method",
+          "variable": "mul",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "s2"
+            },
+            {
+              "object": "method",
+              "variable": "s2"
+            }
+          ]
+        },
+        {
+          "key": "twice_ab",
+          "object": "method",
+          "variable": "mul",
+          "arguments": [
+            {
+              "object": "direct",
+              "variable": 2
+            },
+            {
+              "object": "method",
+              "variable": "s1"
+            },
+            {
+              "object": "method",
+              "variable": "s2"
+            }
+          ]
+        },
+        {
+          "key": "foo_s4",
+          "object": "method",
+          "variable": "mul",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "s4"
+            },
+            {
+              "object": "method",
+              "variable": "node4"
+            }
+          ]
+        },
+        {
+          "key": "whole_squared",
+          "object": "method",
+          "variable": "add",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "a_square"
+            },
+            {
+              "object": "method",
+              "variable": "b_square"
+            },
+            {
+              "object": "method",
+              "variable": "twice_ab"
+            }
+          ]
+        },
+        {
+          "key": "modify",
+          "object": "method",
+          "variable": "append_columns",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "read_file"
+            },
+            {
+              "object": "method",
+              "variable": "whole_squared",
+              "name": "(s1 + s2) ^ 2"
+            },
+            {
+              "object": "method",
+              "variable": "foo_s4",
+              "name": "node4 * s4"
+            },
+            {
+              "object": "direct",
+              "variable": "I am Batman",
+              "name": "bat col"
+            }
+          ]
+        },
+        {
+          "key": "write_file",
+          "object": "method",
+          "variable": "write_file",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "modify"
+            },
+            {
+              "object": "direct",
+              "variable": "output/data_modified.csv",
+              "name": "file_path"
+            },
+            {
+              "object": "direct",
+              "variable": "frame",
+              "name": "write_using"
+            },
+            {
+              "object": "direct",
+              "variable": "csv",
+              "name": "write_as"
+            }
+          ]
+        }
+      ],
+      "streams": [
+        {
+          "task": "write_file",
+          "downstreams": ["modify"]
+        },
+        {
+          "task": "modify",
+          "downstreams": ["read_file", "whole_squared", "foo_s4"]
+        },
+        {
+          "task": "whole_squared",
+          "downstreams": ["a_square", "b_square", "twice_ab"]
+        },
+        {
+          "task": "a_square",
+          "downstreams": ["s1"]
+        },
+        {
+          "task": "b_square",
+          "downstreams": ["s2"]
+        },
+        {
+          "task": "twice_ab",
+          "downstreams": ["s1", "s2"]
+        },
+        {
+          "task": "foo_s4",
+          "downstreams": ["s4", "node4"]
+        },
+        {
+          "task": "s1",
+          "downstreams": ["read_file"]
+        },
+        {
+          "task": "s2",
+          "downstreams": ["read_file"]
+        },
+        {
+          "task": "s4",
+          "downstreams": ["read_file"]
+        },
+        {
+          "task": "node4",
+          "downstreams": ["node1", "node3"]
+        },
+        {
+          "task": "node3",
+          "downstreams": ["node1", "node2"]
+        },
+        {
+          "task": "read_file",
+          "downstreams": ["csv_file"]
+        }
+      ]
+    }
+  },
+  {
+    "workflow_key": "dump-preprocess-1",
+    "method_dag": {
+      "tasks": [
+        {
+          "key": "get_merchant",
+          "object": ""
+        },
+        {
+          "key": "get_merchant_idir",
+          "object": "method",
+          "variable": "merchant_dir",
+          "arguments": [
+            {
+              "object": "kwargs_obj",
+              "variable": "merchant_id",
+              "name": "merchant_id"
+            },
+            {
+              "object": "direct",
+              "variable": "input",
+              "name": "folder_type"
+            }
+          ]
+        },
+        {
+          "key": "get_merchant_hdir",
+          "object": "method",
+          "variable": "merchant_dir",
+          "arguments": [
+            {
+              "object": "kwargs_obj",
+              "variable": "merchant_id",
+              "name": "merchant_id"
+            },
+            {
+              "object": "direct",
+              "variable": "helpers",
+              "name": "folder_type"
+            }
+          ]
+        },
+        {
+          "key": "merchant_stock_input_file",
+          "object": "method",
+          "variable": "os_join",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "get_merchant_idir"
+            },
+            {
+              "object": "direct",
+              "variable": "stock_input.csv"
+            }
+          ]
+        },
+        {
+          "key": "merchant_master_file",
+          "object": "method",
+          "variable": "os_join",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "get_merchant_hdir"
+            },
+            {
+              "object": "direct",
+              "variable": "master_file.csv"
+            }
+          ]
+        },
+        {
+          "key": "read_iventory",
+          "object": "method",
+          "variable": "read_file",
+          "arguments": [
+            {
+              "object": "kwargs_obj",
+              "variable": "inventory_file",
+              "name": "file_path"
+            },
+            {
+              "object": "direct",
+              "variable": "frame",
+              "name": "read_using"
+            },
+            {
+              "object": "direct",
+              "variable": "csv",
+              "name": "read_as"
+            },
+            {
+              "object": "kwargs_obj",
+              "variable": "inventory_cols",
+              "name": "names"
+            }
+          ]
+        },
+        {
+          "key": "read_master",
+          "object": "method",
+          "variable": "read_file",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "merchant_master_file",
+              "name": "file_path"
+            },
+            {
+              "object": "direct",
+              "variable": "frame",
+              "name": "read_using"
+            },
+            {
+              "object": "direct",
+              "variable": "csv",
+              "name": "read_as"
+            }
+          ]
+        },
+        {
+          "key": "make_stock_input",
+          "object": "method",
+          "variable": "intersect",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "read_master"
+            },
+            {
+              "object": "method",
+              "variable": "read_iventory"
+            },
+            {
+              "object": "direct",
+              "variable": "barcode",
+              "name": "on"
+            }
+          ]
+        },
+        {
+          "key": "write_stock_input",
+          "object": "method",
+          "variable": "write_file",
+          "arguments": [
+            {
+              "object": "method",
+              "variable": "make_stock_input"
+            },
+            {
+              "object": "method",
+              "variable": "merchant_stock_input_file",
+              "name": "file_path"
+            },
+            {
+              "object": "direct",
+              "variable": "frame",
+              "name": "write_using"
+            },
+            {
+              "object": "direct",
+              "variable": "csv",
+              "name": "write_as"
+            }
+          ]
+        }
+      ],
+      "streams": [
+        {
+          "task": "write_stock_input",
+          "downstreams": [
+            "merchant_stock_input_file",
+            "make_stock_input"
+          ]
+        },
+        {
+          "task": "merchant_stock_input_file",
+          "downstreams": [
+            "get_merchant_idir"
+          ]
+        },
+        {
+          "task": "make_stock_input",
+          "downstreams": [
+            "read_master",
+            "read_iventory"
+          ]
+        },
+        {
+          "task": "read_master",
+          "downstreams": [
+            "merchant_master_file"
+          ]
+        },
+        {
+          "task": "merchant_master_file",
+          "downstreams": [
+            "get_merchant_hdir"
+          ]
+        }
+      ]
+    }
+  }
+]

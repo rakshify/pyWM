@@ -6,7 +6,7 @@ from functools import reduce, partial
 import numpy as np
 import pandas as pd
 
-from lib.op_utils.basic_utils import method_map as core_method_map
+from src.op_utils.basic_utils import method_map as core_method_map
 
 
 method_map = {}
