@@ -1,3 +1,8 @@
+import asyncio
+import os
+import time
+
+from multiprocessing import Process, Queue, cpu_count, Manager
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pandas as pd
@@ -15,6 +20,7 @@ class Method(object):
         self.upstream: Dict[str, bool] = {}
         self.downstream: List[Method] = []
         self.executed: bool = False
+        self.executing: bool = False
         self.output: Any = None
 
     def is_executable(self):
@@ -43,12 +49,8 @@ class Method(object):
                     kw[arg["name"]] = val
                 else:
                     args.append(val)
-            # if self.value["variable"] in ("mul", "add"):
-            #     print(self.key)
             self.output = foo(*args, **kw)
-            # if self.value["variable"] in ("mul", "add"):
-            #     print(self.output)
-            #     input("just checking in execute...")
+            self.executing = False
             self.executed = True
         return self.output
 
@@ -56,10 +58,12 @@ class Method(object):
 class MethodDAG(object):
     def __init__(self, tasks: List[Dict[str, Any]]):
         self.node_map: Dict[str, Any] = {}
-        self.nodes: List[Method] = {}
+        self.nodes: Dict[str, Method] = {}
+        self.tasks: Dict[str, bool] = {}
         for task in tasks:
             key = task.pop("key")
             args = task.pop("arguments")
+            self.tasks[key] = False
             self.node_map[key] = None
             self.nodes[key] = Method(key, task, args)
         self.queue = []
@@ -75,19 +79,15 @@ class MethodDAG(object):
         for method in self.nodes.values():
             method.unique_downstream()
             if method.is_executable():
+                method.executing = True
                 self.queue.append(method)
 
     def compute(self, method_map: Dict[str, Callable], **kwargs) -> Any:
-        # print("queue length %d" % len(self.queue))
+        self.set_queue()
         while len(self.queue) > 0:
-            # print([method.key for method in self.queue])
-            # input("checking queue...")
             method = self.queue.pop()
             self.node_map[method.key] = method.execute(
                 method_map, self.node_map, **kwargs)
-            # print("executed method %s" % method.key)
-            # print("downstream = ", [task.key for task in method.downstream])
-            # input("...")
             for dependent in method.downstream:
                 dependent.upstream[method.key] = True
                 if dependent.is_executable():
@@ -97,5 +97,63 @@ class MethodDAG(object):
     def parse(cls, config: Dict[str, Any]) -> "MethodDAG":
         dag = cls(config["tasks"])
         dag.set_dependencies(config["streams"])
-        dag.set_queue()
         return dag
+
+
+class MethodDAGConcurrent(MethodDAG):
+    def __init__(self, tasks: List[Dict[str, Any]], n: int = -1):
+        super(MethodDAGConcurrent, self).__init__(tasks)
+        self.queue = asyncio.Queue()
+        if n == -1:
+            self.num_processes = cpu_count()
+        else:
+            self.num_processes = n
+
+    async def produce(self, queue: asyncio.Queue):
+        for method in self.nodes.values():
+            method.unique_downstream()
+            if method.is_executable():
+                method.executing = True
+                await self.queue.put(method)
+        while True:
+            complete = all([
+                method.executed or method.executing
+                for method in self.nodes.values()
+            ])
+            if complete:
+                break
+            for method in self.nodes.values():
+                execution = method.executed or method.executing
+                if self.tasks[method.key]:
+                    for dependent in method.downstream:
+                        dependent.upstream[method.key] = True
+                if method.is_executable() and not execution:
+                    method.executing = True
+                    await self.queue.put(method)
+            await asyncio.sleep(0.001)
+
+    async def consume(self, queue: asyncio.Queue(),
+                      method_map: Dict[str, Callable], **kwargs):
+        while True:
+            method = await self.queue.get()
+            self.node_map[method.key] = method.execute(
+                method_map, self.node_map, **kwargs)
+            self.tasks[method.key] = True
+            queue.task_done()
+
+    async def _compute(self, method_map: Dict[str, Callable], **kwargs) -> Any:
+        producer = self.produce(self.queue)
+        consumers = []
+        for i in range(self.num_processes):
+            p = asyncio.ensure_future(self.consume(
+                self.queue, method_map, **kwargs))
+            consumers.append(p)
+        await asyncio.gather(producer, return_exceptions=True)
+        await self.queue.join()
+        for consumer in consumers:
+            consumer.cancel()
+
+    def compute(self, method_map: Dict[str, Callable], **kwargs) -> Any:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._compute(method_map, **kwargs))
+        loop.close()
